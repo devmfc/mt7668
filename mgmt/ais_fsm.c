@@ -965,8 +965,8 @@ VOID aisFsmSteps(IN P_ADAPTER_T prAdapter, ENUM_AIS_STATE_T eNextState)
 		/* Do entering Next State */
 		prAisFsmInfo->ePreviousState = prAisFsmInfo->eCurrentState;
 
-		DBGLOG(AIS, STATE, "[AIS]TRANSITION: [%s] -> [%s]\n",
-			apucDebugAisState[prAisFsmInfo->eCurrentState], apucDebugAisState[eNextState]);
+	//	DBGLOG(AIS, STATE, "[AIS]TRANSITION: [%s] -> [%s]\n",
+		//	apucDebugAisState[prAisFsmInfo->eCurrentState], apucDebugAisState[eNextState]);
 
 		/* NOTE(Kevin): This is the only place to change the eCurrentState(except initial) */
 		prAisFsmInfo->eCurrentState = eNextState;

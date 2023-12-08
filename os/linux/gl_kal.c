@@ -5216,6 +5216,8 @@ kalSetNetAddress(IN P_GLUE_INFO_T prGlueInfo,
 	P_PARAM_NETWORK_ADDRESS prParamNetAddr;
 	UINT_32 i, u4AddrLen;
 
+	pr_info("DEVMFC: %s ucBssIdx [%d] \n",__func__,ucBssIdx);
+
 	/* 4 <1> Calculate buffer size */
 	/* IPv4 */
 	u4Len += (((sizeof(PARAM_NETWORK_ADDRESS) - 1) + IPV4_ADDR_LEN) * u4NumIPv4Addr);

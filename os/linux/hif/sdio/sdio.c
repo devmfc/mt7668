@@ -429,6 +429,7 @@ int mtk_sdio_probe(struct sdio_func *func, const struct sdio_device_id *id)
 #define MMC_FILTER	"mmc0"
 #endif
 
+	pr_info("DEVMFC: %s\n", __func__);
 	/* int i = 0; */
 
 	/* printk(KERN_INFO DRV_NAME "mtk_sdio_probe()\n"); */
@@ -1064,10 +1065,9 @@ BOOL kalDevRegRead(IN P_GLUE_INFO_T prGlueInfo, IN UINT_32 u4Register, OUT PUINT
 #endif
 
 		if (ret || ucRetryCount) {
-			/* DBGLOG(HAL, ERROR,
-			 *  ("sdio_readl() addr: 0x%08x value: 0x%08x status: %x retry: %u\n",
-			 *  u4Register, (unsigned int)*pu4Value, (unsigned int)ret, ucRetryCount));
-			 */
+			DBGLOG(HAL, ERROR,
+					"sdio_readl() addr: 0x%08x value: 0x%08x status: %x retry: %u\n",
+			 		u4Register, (unsigned int)*pu4Value, (unsigned int)ret, ucRetryCount);
 
 			if (glIsReadClearReg(u4Register) && (ucRetryCount == 0)) {
 				/* Read Snapshot CR instead */
@@ -1076,8 +1076,10 @@ BOOL kalDevRegRead(IN P_GLUE_INFO_T prGlueInfo, IN UINT_32 u4Register, OUT PUINT
 		}
 
 		ucRetryCount++;
-		if (ucRetryCount > HIF_SDIO_ACCESS_RETRY_LIMIT)
+		if (ucRetryCount > HIF_SDIO_ACCESS_RETRY_LIMIT) {
+			pr_info("DEVMFC: %s  HIF_SDIO_ACCESS_RETRY_LIMIT reached (sdio)\n", __func__);
 			break;
+		}
 	} while (ret);
 
 	if (ret) {
@@ -1196,10 +1198,10 @@ BOOL kalDevRegWrite(IN P_GLUE_INFO_T prGlueInfo, IN UINT_32 u4Register, IN UINT_
 #endif
 
 		if (ret || ucRetryCount) {
-			/* DBGLOG(HAL, ERROR,
-			 *  ("sdio_writel() addr: 0x%x status: %x retry: %u\n", u4Register,
-			 *  ret, ucRetryCount));
-			 */
+			 DBGLOG(HAL, ERROR,
+			   "sdio_writel() addr: 0x%x status: %x retry: %u\n", u4Register,
+			   ret, ucRetryCount);
+			 
 		}
 
 		ucRetryCount++;

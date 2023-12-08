@@ -491,7 +491,7 @@ WLAN_STATUS wlanAdapterStart(IN P_ADAPTER_T prAdapter, IN P_REG_INFO_T prRegInfo
 #if (CFG_SUPPORT_NIC_CAPABILITY == 1)
 
 			/* 2.9 Workaround for Capability CMD packet lost issue */
-			DBGLOG(INIT, WARN, "Send a Dummy CMD as workaround\n");
+			DBGLOG(INIT, INFO, "Send a Dummy CMD as workaround\n");
 			wlanSendDummyCmd(prAdapter, TRUE);
 
 			/* 3. query for NIC capability */
@@ -652,7 +652,7 @@ WLAN_STATUS wlanAdapterStart(IN P_ADAPTER_T prAdapter, IN P_REG_INFO_T prRegInfo
 		if (kalIsConfigurationExist(prAdapter->prGlueInfo) == TRUE)
 			wlanLoadManufactureData(prAdapter, prRegInfo);
 		else
-			DBGLOG(INIT, WARN, "%s: load manufacture data fail\n", __func__);
+			DBGLOG(INIT, INFO, "%s: load manufacture data fail\n", __func__);
 #endif
 
 #if 0
@@ -967,6 +967,9 @@ WLAN_STATUS wlanProcessCommandQueue(IN P_ADAPTER_T prAdapter, IN P_QUE_T prCmdQu
 		case COMMAND_TYPE_SECURITY_FRAME:
 			/* inquire with QM */
 			prMsduInfo = prCmdInfo->prMsduInfo;
+			if(prMsduInfo->u2FrameLength > 1408) {
+					pr_info("DEVMFC: %s securoty fram too BIG u2FrameLength[%d]\n", __func__, prMsduInfo->u2FrameLength);
+			}
 
 			eFrameAction = qmGetFrameAction(prAdapter, prMsduInfo->ucBssIndex,
 							prMsduInfo->ucStaRecIndex, NULL, FRAME_TYPE_802_1X,
@@ -976,7 +979,9 @@ WLAN_STATUS wlanProcessCommandQueue(IN P_ADAPTER_T prAdapter, IN P_QUE_T prCmdQu
 		case COMMAND_TYPE_MANAGEMENT_FRAME:
 			/* inquire with QM */
 			prMsduInfo = prCmdInfo->prMsduInfo;
-
+			if(prMsduInfo->u2FrameLength > 1408) {
+					pr_info("DEVMFC: %s command frame too BIG u2FrameLength[%d]\n", __func__, prMsduInfo->u2FrameLength);
+			}
 			eFrameAction = qmGetFrameAction(prAdapter, prMsduInfo->ucBssIndex,
 							prMsduInfo->ucStaRecIndex, prMsduInfo, FRAME_TYPE_MMPDU,
 							prMsduInfo->u2FrameLength);
@@ -1005,7 +1010,7 @@ WLAN_STATUS wlanProcessCommandQueue(IN P_ADAPTER_T prAdapter, IN P_QUE_T prCmdQu
 
 			if (rStatus == WLAN_STATUS_RESOURCES) {
 				/* no more TC4 resource for further transmission */
-				DBGLOG(INIT, WARN, "NO Res CMD TYPE[%u] ID[0x%02X] SEQ[%u]\n",
+				DBGLOG(INIT, INFO, "NO Res CMD TYPE[%u] ID[0x%02X] SEQ[%u]\n",
 				       prCmdInfo->eCmdType, prCmdInfo->ucCID, prCmdInfo->ucCmdSeqNum);
 
 				set_bit(GLUE_FLAG_HIF_PRT_HIF_DBG_INFO_BIT, &(prAdapter->prGlueInfo->ulFlag));
@@ -2946,7 +2951,7 @@ WLAN_STATUS wlanPatchSendComplete(IN P_ADAPTER_T prAdapter)
 	u4Status = wlanConfigWifiFuncStatus(prAdapter, ucCmdSeqNum);
 
 	if (u4Status != WLAN_STATUS_SUCCESS)
-		DBGLOG(INIT, INFO, "PATCH FINISH EVT failed\n");
+		DBGLOG(INIT, ERROR, "PATCH FINISH EVT failed\n");
 	else
 		DBGLOG(INIT, INFO, "PATCH FINISH EVT success!!\n");
 
@@ -3268,20 +3273,24 @@ WLAN_STATUS wlanImageSectionDownloadStatus(IN P_ADAPTER_T prAdapter, IN UINT_8 u
 	do {
 		if (kalIsCardRemoved(prAdapter->prGlueInfo) == TRUE || fgIsBusAccessFailed == TRUE) {
 			u4Status = WLAN_STATUS_FAILURE;
+			pr_info("DEVMFC: %s ERR 1\n",__func__);
 		} else if (nicRxWaitResponse(prAdapter,
 					     ucPortIdx,
 					     aucBuffer,
 					     sizeof(INIT_HIF_RX_HEADER_T) +
 					     sizeof(INIT_EVENT_CMD_RESULT), &u4RxPktLength) != WLAN_STATUS_SUCCESS) {
 			u4Status = WLAN_STATUS_FAILURE;
+			pr_info("DEVMFC: %s ERR 2\n",__func__);
 		} else {
 			prInitHifRxHeader = (P_INIT_HIF_RX_HEADER_T) aucBuffer;
 
 			/* EID / SeqNum check */
 			if (prInitHifRxHeader->rInitWifiEvent.ucEID != INIT_EVENT_ID_CMD_RESULT) {
 				u4Status = WLAN_STATUS_FAILURE;
+				pr_info("DEVMFC: %s ERR 3\n",__func__);
 			} else if (prInitHifRxHeader->rInitWifiEvent.ucSeqNum != ucCmdSeqNum) {
 				u4Status = WLAN_STATUS_FAILURE;
+				pr_info("DEVMFC: %s ERR 4 [%d] [%d]\n",__func__, prInitHifRxHeader->rInitWifiEvent.ucSeqNum, ucCmdSeqNum);
 			} else {
 				prEventCmdResult =
 				    (P_INIT_EVENT_CMD_RESULT) (prInitHifRxHeader->rInitWifiEvent.aucBuffer);
@@ -3395,7 +3404,7 @@ WLAN_STATUS wlanConfigWifiFunc(IN P_ADAPTER_T prAdapter,
 	u4Status = wlanConfigWifiFuncStatus(prAdapter, ucCmdSeqNum);
 
 	if (u4Status != WLAN_STATUS_SUCCESS)
-		DBGLOG(INIT, INFO, "FW_START EVT failed\n");
+		DBGLOG(INIT, ERROR, "FW_START EVT failed\n");
 	else
 		DBGLOG(INIT, INFO, "FW_START EVT success!!\n");
 
@@ -4901,7 +4910,7 @@ WLAN_STATUS wlanQueryNicCapability(IN P_ADAPTER_T prAdapter)
 
 		prEvent = (P_WIFI_EVENT_T) aucBuffer;
 		if (prEvent->ucEID != EVENT_ID_NIC_CAPABILITY) {
-			DBGLOG(INIT, WARN, "%s: skip unexpected event ID[0x%02x]\n", __func__, prEvent->ucEID);
+			DBGLOG(INIT, INFO, "%s: skip unexpected event ID[0x%02x]\n", __func__, prEvent->ucEID);
 			continue;
 		} else {
 			break;

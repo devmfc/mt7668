@@ -134,8 +134,8 @@ VOID scnFsmSteps(IN P_ADAPTER_T prAdapter, IN ENUM_SCAN_STATE_T eNextState)
 	prScanParam = &prScanInfo->rScanParam;
 
 	do {
-		DBGLOG(SCN, STATE, "[SCAN]TRANSITION: [%s] -> [%s]\n",
-			apucDebugScanState[prScanInfo->eCurrentState], apucDebugScanState[eNextState]);
+	//	DBGLOG(SCN, STATE, "[SCAN]TRANSITION: [%s] -> [%s]\n",
+		//	apucDebugScanState[prScanInfo->eCurrentState], apucDebugScanState[eNextState]);
 
 		/* NOTE(Kevin): This is the only place to change the eCurrentState(except initial) */
 		prScanInfo->eCurrentState = eNextState;

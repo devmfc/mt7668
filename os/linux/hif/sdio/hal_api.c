@@ -147,8 +147,8 @@ BOOL halVerifyChipID(IN P_ADAPTER_T prAdapter)
 
 	HAL_MCR_RD(prAdapter, MCR_WCIR, &u4CIR);
 
-	DBGLOG(INIT, TRACE, "Chip ID: 0x%lx\n", u4CIR & WCIR_CHIP_ID);
-	DBGLOG(INIT, TRACE, "Revision ID: 0x%lx\n", ((u4CIR & WCIR_REVISION_ID) >> 16));
+	DBGLOG(INIT, INFO, "Chip ID: 0x%lx\n", u4CIR & WCIR_CHIP_ID);
+	DBGLOG(INIT, INFO, "Revision ID: 0x%lx\n", ((u4CIR & WCIR_REVISION_ID) >> 16));
 
 	prChipInfo = prAdapter->chip_info;
 
@@ -195,10 +195,14 @@ halRxWaitResponse(IN P_ADAPTER_T prAdapter, IN UINT_8 ucPortIdx, OUT PUINT_8 puc
 			/* timeout exceeding check */
 			u4Current = (UINT_32) kalGetTimeTick();
 
-			if ((u4Current > u4Time) && ((u4Current - u4Time) > RX_RESPONSE_TIMEOUT))
+			if ((u4Current > u4Time) && ((u4Current - u4Time) > RX_RESPONSE_TIMEOUT)) {
+				pr_info("DEVMFC: %s 2 RX_RESPONSE_TIMEOUT [%d] (sdio)\n", __func__, RX_RESPONSE_TIMEOUT);
 				return WLAN_STATUS_FAILURE;
-			else if (u4Current < u4Time && ((u4Current + (0xFFFFFFFF - u4Time)) > RX_RESPONSE_TIMEOUT))
+			}
+			else if (u4Current < u4Time && ((u4Current + (0xFFFFFFFF - u4Time)) > RX_RESPONSE_TIMEOUT)){
+				pr_info("DEVMFC: %s 3(sdio)\n", __func__);
 				return WLAN_STATUS_FAILURE;
+			}
 
 			/* Response packet is not ready */
 			kalUdelay(50);
@@ -207,15 +211,18 @@ halRxWaitResponse(IN P_ADAPTER_T prAdapter, IN UINT_8 ucPortIdx, OUT PUINT_8 puc
 #if (CFG_ENABLE_READ_EXTRA_4_BYTES == 1)
 #if CFG_SDIO_RX_AGG
 			/* decide copy length */
-			if (u4PktLen > u4MaxRespBufferLen)
+			if (u4PktLen > u4MaxRespBufferLen) {
+				pr_info("DEVMFC: %s packet longer than buf u4PktLen[%d]\n", __func__, u4PktLen);	
 				u4CpyLen = u4MaxRespBufferLen;
+			}
 			else
 				u4CpyLen = u4PktLen;
 
 			/* read from SDIO to tmp. buffer */
-			HAL_PORT_RD(prAdapter, i == 0 ? MCR_WRDR0 : MCR_WRDR1,
-				ALIGN_4(u4PktLen + 4), prRxCtrl->pucRxCoalescingBufPtr,
-				HIF_RX_COALESCING_BUFFER_SIZE);
+			HAL_PORT_RD(prAdapter,
+					i == 0 ? MCR_WRDR0 : MCR_WRDR1,	ALIGN_4(u4PktLen + 4), prRxCtrl->pucRxCoalescingBufPtr,	HIF_RX_COALESCING_BUFFER_SIZE);
+					//i == 0 ? MCR_WRDR0 : MCR_WRDR1,	ALIGN_4(u4PktLen + 4), prRxCtrl->pucRxCoalescingBufPtr,	HIF_RX_COALESCING_BUFFER_SIZE); // :DEVMFC org
+			
 
 			/* copy to destination buffer */
 			kalMemCopy(pucRspBuffer, prRxCtrl->pucRxCoalescingBufPtr, u4CpyLen);
@@ -1880,7 +1887,7 @@ VOID halPrintMailbox(IN P_ADAPTER_T prAdapter)
 
 	halGetMailbox(prAdapter, 0, &u4MailBoxStatus0);
 	halGetMailbox(prAdapter, 1, &u4MailBoxStatus1);
-	DBGLOG(INIT, ERROR, "MailBox Status = 0x%08X, 0x%08X\n", u4MailBoxStatus0, u4MailBoxStatus1);
+	DBGLOG(INIT, INFO, "MailBox Status = 0x%08X, 0x%08X\n", u4MailBoxStatus0, u4MailBoxStatus1);
 }
 
 VOID halProcessSoftwareInterrupt(IN P_ADAPTER_T prAdapter)
@@ -2170,7 +2177,7 @@ VOID halPollDbgCr(IN P_ADAPTER_T prAdapter, IN UINT_32 u4LoopCount)
 
 	for (u4Loop = 0; u4Loop < u4LoopCount; u4Loop++) {
 		HAL_MCR_RD(prAdapter, MCR_SWPCDBGR, &u4Data);
-		DBGLOG(INIT, WARN, "SWPCDBGR 0x%08X\n", u4Data);
+		DBGLOG(INIT, INFO, "SWPCDBGR 0x%08X\n", u4Data);
 	}
 }
 

@@ -1271,8 +1271,8 @@ int mtk_cfg80211_auth(struct wiphy *wiphy, struct net_device *ndev,
 		/* [TODO] to consider if bssid/auth_alg changed
 		 * (need to update to AIS)
 		 */
-		if (fgNewAuthParam)
-			DBGLOG(REQ, WARN, "auth param update\n");
+		if (!prConnSettings->fgIsConnInitialized && fgNewAuthParam)
+			DBGLOG(REQ, INFO, "auth param update\n");
 
 		rStatus = kalIoctl(prGlueInfo, wlanoidSetConnect,
 				(void *)&rNewSsid, sizeof(PARAM_CONNECT_T),
@@ -2409,7 +2409,7 @@ void mtk_cfg80211_mgmt_frame_register(IN struct wiphy *wiphy,
 
 	do {
 
-		DBGLOG(INIT, TRACE, "mtk_cfg80211_mgmt_frame_register\n");
+		DBGLOG(INIT, TRACE, "mtk_cfg80211_update_mgmt_frame_registrations\n");
 
 		prGlueInfo = (P_GLUE_INFO_T) wiphy_priv(wiphy);
 
