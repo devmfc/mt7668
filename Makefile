@@ -3,8 +3,8 @@
 ##############################################################
 # Common settings
 ##############################################################
-export MTK_COMBO_CHIP=MT6632
-export HIF=usb
+export MTK_COMBO_CHIP=MT7668
+export HIF=sdio
 export CONFIG_MTK_WIFI_ONLY=m
 export CONFIG_MTK_COMBO=m
 export CONFIG_MTK_COMBO_WIFI=m
@@ -13,7 +13,7 @@ export CONFIG_MTK_COMBO_COMM_UART=m
 export CONFIG_MTK_COMBO_COMM_SDIO=m
 export CONFIG_MT_WIFI_CHRDEV=m
 WLAN_CHIP_ID := mt76x8
-
+CONFIG_MT7668=m
 PWD=$(shell pwd)
 DRIVER_DIR=$(PWD)
 
@@ -107,7 +107,7 @@ CFG_ENABLE_WAKE_LOCK=0
 # y: enable, n: disable
 CFG_ANDROID_AOSP_PRIV_CMD=y
 
-CFG_DEFAULT_DBG_LEVEL=0xF
+CFG_DEFAULT_DBG_LEVEL=0xB
 
 CFG_TX_DIRECT_USB=1
 
@@ -279,8 +279,9 @@ ccflags-y += -DWLAN_INCLUDE_PROC
 ccflags-y += -DCFG_SUPPORT_AGPS_ASSIST=1
 ccflags-y += -DCFG_SUPPORT_TSF_USING_BOOTTIME=1
 ccflags-y += -Wno-error
-ccflags-y += -Wno-implicit-function-declaration
-ccflags-y += -Wno-incompatible-pointer-types
+#ccflags-y += -Wundef
+#ccflags-y += -Wno-implicit-function-declaration
+#ccflags-y += -Wno-incompatible-pointer-types
 ccflags-y:=$(filter-out -U$(WLAN_CHIP_ID),$(ccflags-y))
 ccflags-y += -DLINUX -D$(WLAN_CHIP_ID)
 
@@ -397,10 +398,9 @@ endif
 ifeq ($(MODULE_NAME),)
 	MODULE_NAME := wlan_$(shell echo $(strip $(WLAN_CHIP_ID)) | tr A-Z a-z)_$(CONFIG_MTK_COMBO_WIFI_HIF)
 endif
-src = $(KERNEL_SRC)/$(M)
+#src = $(LINUX_SRC)/$(M)
 
 ccflags-y += -DDBG=0
-ccflags-y += -Wundef
 ccflags-y += -I$(src)/os -I$(src)/os/linux/include
 ccflags-y += -I$(src)/include -I$(src)/include/nic -I$(src)/include/mgmt -I$(src)/include/chips
 ifeq ($(CONFIG_MTK_COMBO_WIFI_HIF), sdio)
@@ -566,8 +566,8 @@ $(MODULE_NAME_PREALLOC)-objs += $(PREALLOC_OBJS)
 obj-m += $(MODULE_NAME_PREALLOC).o
 endif
 
-DRIVER_BUILD_DATE=$(shell date +%Y%m%d%H%M%S)
-ccflags-y += -DDRIVER_BUILD_DATE='"$(DRIVER_BUILD_DATE)"'
+#DRIVER_BUILD_DATE=$(shell date +%Y%m%d%H%M%S)
+ccflags-y += -DDRIVER_BUILD_DATE='"20221215231831"'
 
 
 
@@ -616,85 +616,85 @@ endif
 #= = = = = = = = = = = = = = = = = = = = = = = = = = = =
 # MT53XX start
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - -
-ifeq ($(PLATFORM),MT53XX)
-ifneq ($(DRIVER_PARTIAL_BUILD), y)
-ifneq ($(ANDROID),true)
-	if [ ! -d $(OUTPUT_ROOT)/basic/wifi_ko ]; then \
-		mkdir -p $(OUTPUT_ROOT)/basic/wifi_ko/; \
-	fi
-	if [ -d $(OUTPUT_ROOT)/basic/wifi_ko ]; then \
-		cp -f $(OUT_STA_KO) $(OUTPUT_ROOT)/basic/wifi_ko/$(MODULE_NAME).ko; \
-		$(KERNEL_STRIP) $(STRIP_FLAG) $(OUTPUT_ROOT)/basic/wifi_ko/$(MODULE_NAME).ko; \
-	fi
-else
-	if [ ! -d $(OUTPUT_ROOT)/basic/modules ]; then \
-		mkdir -p $(OUTPUT_ROOT)/basic/modules/; \
-	fi
-ifeq ($(MUL_WIFI_HW_COMPATIBLE), true)
-	if [ -d $(OUTPUT_ROOT)/basic/modules ]; then \
-		cp -f $(OUT_STA_KO) $(OUTPUT_ROOT)/basic/modules/wlan_mt7668.ko; \
-	fi
-else
-	if [ -d $(OUTPUT_ROOT)/basic/modules ]; then \
-		cp -f $(OUT_STA_KO) $(OUTPUT_ROOT)/basic/modules/wlan.ko; \
-	fi
-endif
-ifeq ($(CONFIG_MTK_PREALLOC_MEMORY), y)
-ifeq ($(MUL_WIFI_HW_COMPATIBLE), true)
-	if [ -d $(OUTPUT_ROOT)/basic/modules ]; then \
-		cp -f $(OUT_STA_KO_DIR)/$(MODULE_NAME)_prealloc.ko $(OUTPUT_ROOT)/basic/modules/mtprealloc_mt7668.ko; \
-	fi
-else
-	if [ -d $(OUTPUT_ROOT)/basic/modules ]; then \
-		cp -f $(OUT_STA_KO_DIR)/$(MODULE_NAME)_prealloc.ko $(OUTPUT_ROOT)/basic/modules/mtprealloc.ko; \
-	fi
-endif
-endif
-endif # ifneq ($(ANDROID),true)
-ifeq ($(S_PLATFORM),true)
-	if [ -d $(OUTPUT_ROOT)/basic/modules ]; then \
-		cp -f $(ANDROID_BUILD_TOP)/vendor/mediatek/open/hardware/prebuilt/wifi/WIFI_RAM_CODE_MT7668.bin $(OUTPUT_ROOT)/basic/modules; \
-		cp -f $(ANDROID_BUILD_TOP)/vendor/mediatek/open/hardware/prebuilt/wifi/WIFI_RAM_CODE2_USB_MT7668.bin $(OUTPUT_ROOT)/basic/modules; \
-		cp -f $(ANDROID_BUILD_TOP)/vendor/mediatek/open/hardware/prebuilt/wifi/wifi.cfg $(OUTPUT_ROOT)/basic/modules; \
-		cp -f $(ANDROID_BUILD_TOP)/vendor/mediatek/open/hardware/prebuilt/wifi/TxPwrLimit_MT76x8.dat $(OUTPUT_ROOT)/basic/modules; \
-		cp -f $(ANDROID_BUILD_TOP)/vendor/mediatek/open/hardware/prebuilt/bt/mt7668/mt7668_patch_e1_hdr.bin $(OUTPUT_ROOT)/basic/modules; \
-		cp -f $(ANDROID_BUILD_TOP)/vendor/mediatek/open/hardware/prebuilt/bt/mt7668/mt7668_patch_e2_hdr.bin $(OUTPUT_ROOT)/basic/modules; \
-	fi
-endif
-endif # ifneq ($(DRIVER_PARTIAL_BUILD), y)
-endif # ifeq ($(PLATFORM),MT53XX)
+#ifeq ($(PLATFORM),MT53XX)
+#ifneq ($(DRIVER_PARTIAL_BUILD), y)
+#ifneq ($(ANDROID),true)
+#	if [ ! -d $(OUTPUT_ROOT)/basic/wifi_ko ]; then \
+#		mkdir -p $(OUTPUT_ROOT)/basic/wifi_ko/; \
+#	fi
+#	if [ -d $(OUTPUT_ROOT)/basic/wifi_ko ]; then \
+#		cp -f $(OUT_STA_KO) $(OUTPUT_ROOT)/basic/wifi_ko/$(MODULE_NAME).ko; \
+#		$(KERNEL_STRIP) $(STRIP_FLAG) $(OUTPUT_ROOT)/basic/wifi_ko/$(MODULE_NAME).ko; \
+#	fi
+#else
+#	if [ ! -d $(OUTPUT_ROOT)/basic/modules ]; then \
+#		mkdir -p $(OUTPUT_ROOT)/basic/modules/; \
+#	fi
+#ifeq ($(MUL_WIFI_HW_COMPATIBLE), true)
+#	if [ -d $(OUTPUT_ROOT)/basic/modules ]; then \
+#		cp -f $(OUT_STA_KO) $(OUTPUT_ROOT)/basic/modules/wlan_mt7668.ko; \
+#	fi
+#else
+#	if [ -d $(OUTPUT_ROOT)/basic/modules ]; then \
+#		cp -f $(OUT_STA_KO) $(OUTPUT_ROOT)/basic/modules/wlan.ko; \
+#	fi
+#endif
+#ifeq ($(CONFIG_MTK_PREALLOC_MEMORY), y)
+#ifeq ($(MUL_WIFI_HW_COMPATIBLE), true)
+#	if [ -d $(OUTPUT_ROOT)/basic/modules ]; then \
+#		cp -f $(OUT_STA_KO_DIR)/$(MODULE_NAME)_prealloc.ko $(OUTPUT_ROOT)/basic/modules/mtprealloc_mt7668.ko; \
+#	fi
+#else
+#	if [ -d $(OUTPUT_ROOT)/basic/modules ]; then \
+#		cp -f $(OUT_STA_KO_DIR)/$(MODULE_NAME)_prealloc.ko $(OUTPUT_ROOT)/basic/modules/mtprealloc.ko; \
+#	fi
+#endif
+#endif
+#endif # ifneq ($(ANDROID),true)
+#ifeq ($(S_PLATFORM),true)
+#	if [ -d $(OUTPUT_ROOT)/basic/modules ]; then \
+#		cp -f $(ANDROID_BUILD_TOP)/vendor/mediatek/open/hardware/prebuilt/wifi/WIFI_RAM_CODE_MT7668.bin $(OUTPUT_ROOT)/basic/modules; \
+#		cp -f $(ANDROID_BUILD_TOP)/vendor/mediatek/open/hardware/prebuilt/wifi/WIFI_RAM_CODE2_USB_MT7668.bin $(OUTPUT_ROOT)/basic/modules; \
+#		cp -f $(ANDROID_BUILD_TOP)/vendor/mediatek/open/hardware/prebuilt/wifi/wifi.cfg $(OUTPUT_ROOT)/basic/modules; \
+#		cp -f $(ANDROID_BUILD_TOP)/vendor/mediatek/open/hardware/prebuilt/wifi/TxPwrLimit_MT76x8.dat $(OUTPUT_ROOT)/basic/modules; \
+#		cp -f $(ANDROID_BUILD_TOP)/vendor/mediatek/open/hardware/prebuilt/bt/mt7668/mt7668_patch_e1_hdr.bin $(OUTPUT_ROOT)/basic/modules; \
+#		cp -f $(ANDROID_BUILD_TOP)/vendor/mediatek/open/hardware/prebuilt/bt/mt7668/mt7668_patch_e2_hdr.bin $(OUTPUT_ROOT)/basic/modules; \
+#	fi
+#endif
+#endif # ifneq ($(DRIVER_PARTIAL_BUILD), y)
+#endif # ifeq ($(PLATFORM),MT53XX)
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # MT53XX end
 #= = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
 clean: driver_clean
-ifeq ($(PLATFORM),MT53XX)
-ifeq ($(S_PLATFORM),true)
-	if [ -d $(OUTPUT_ROOT)/basic/modules ]; then \
-		rm -f $(OUTPUT_ROOT)/basic/modules/WIFI_RAM_CODE_MT7668.bin; \
-		rm -f $(OUTPUT_ROOT)/basic/modules/WIFI_RAM_CODE2_USB_MT7668.bin; \
-		rm -f $(OUTPUT_ROOT)/basic/modules/wifi.cfg; \
-		rm -f $(OUTPUT_ROOT)/basic/modules/TxPwrLimit_MT76x8.dat; \
-		rm -f $(OUTPUT_ROOT)/basic/modules/mt7668_patch_e1_hdr.bin; \
-		rm -f $(OUTPUT_ROOT)/basic/modules/mt7668_patch_e2_hdr.bin; \
-	fi
-endif
-endif
+#ifeq ($(PLATFORM),MT53XX)
+#ifeq ($(S_PLATFORM),true)
+#	if [ -d $(OUTPUT_ROOT)/basic/modules ]; then \
+#		rm -f $(OUTPUT_ROOT)/basic/modules/WIFI_RAM_CODE_MT7668.bin; \
+#		rm -f $(OUTPUT_ROOT)/basic/modules/WIFI_RAM_CODE2_USB_MT7668.bin; \
+#		rm -f $(OUTPUT_ROOT)/basic/modules/wifi.cfg; \
+#		rm -f $(OUTPUT_ROOT)/basic/modules/TxPwrLimit_MT76x8.dat; \
+#		rm -f $(OUTPUT_ROOT)/basic/modules/mt7668_patch_e1_hdr.bin; \
+#		rm -f $(OUTPUT_ROOT)/basic/modules/mt7668_patch_e2_hdr.bin; \
+#	fi
+#endif
+#endif
 
 driver_clean:
-ifneq ($(ANDROID),true)
-	rm -rf $(THIRDPARTY_LIB_ROOT)/wlan
-endif
-	if [ -d $(DRIVER_DIR) ]; then \
-		cd $(DRIVER_DIR); \
-		find -L \
-		\( -name '*.ko' -o -name '.*.cmd' \
-		-o -name '*.o' -o -name '*.mod.c' \
-		-o -name '*.o.d' \
-		-o -name 'modules.order' \
-		-o -name 'Module.symvers' \) -type f -print | xargs rm -f; \
-		find -L \( -name '.tmp_versions' \) -print | xargs rm -rf {}; \
-	fi
+#ifneq ($(ANDROID),true)
+#	rm -rf $(THIRDPARTY_LIB_ROOT)/wlan
+#endif
+#if [ -d $(DRIVER_DIR) ]; then \
+#	cd $(DRIVER_DIR); \
+#	find -L \
+#	\( -name '*.ko' -o -name '.*.cmd' \
+#	-o -name '*.o' -o -name '*.mod.c' \
+#	-o -name '*.o.d' \
+#	-o -name 'modules.order' \
+#	-o -name 'Module.symvers' \) -type f -print | xargs rm -f; \
+#	find -L \( -name '.tmp_versions' \) -print | xargs rm -rf {}; \
+#fi
 
 
 .PHONY: all clean driver driver_clean

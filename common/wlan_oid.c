@@ -73,7 +73,7 @@
 #include "gl_wext.h"
 #include "gl_vendor.h"
 #include "debug.h"
-#include <stddef.h>
+// #include <stddef.h>
 
 /******************************************************************************
 *                              C O N S T A N T S
