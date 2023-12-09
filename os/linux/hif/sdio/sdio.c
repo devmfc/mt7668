@@ -1431,11 +1431,6 @@ kalDevPortWrite(IN P_GLUE_INFO_T prGlueInfo,
 
 #if (MTK_WCN_HIF_SDIO == 0)
 	struct sdio_func *prSdioFunc = NULL;
-#endif
-
-#if DBG
-	/* printk(KERN_INFO DRV_NAME"++kalDevPortWrite++ buf:0x%p, port:0x%x, length:%d\n", pucBuf, u2Port, u2Len); */
-#endif
 
 	ASSERT(prGlueInfo);
 	prHifInfo = &prGlueInfo->rHifInfo;

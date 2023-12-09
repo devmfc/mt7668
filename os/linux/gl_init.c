@@ -1420,6 +1420,12 @@ VOID wlanDebugInit(VOID)
 #ifdef CFG_DEFAULT_DBG_LEVEL
 	for (i = 0; i < DBG_MODULE_NUM; i++)
 		aucDebugModule[i] = CFG_DEFAULT_DBG_LEVEL;
+	
+	// DEVMFC
+	//aucDebugModule[DBG_INIT_IDX] |= DBG_CLASS_INFO;
+	aucDebugModule[DBG_QM_IDX] &= ~(DBG_CLASS_EVENT | DBG_CLASS_INFO | DBG_CLASS_WARN);
+	aucDebugModule[DBG_RSN_IDX] &= ~(DBG_CLASS_EVENT | DBG_CLASS_INFO | DBG_CLASS_WARN);
+	//
 #else
 
 	for (i = 0; i < DBG_MODULE_NUM; i++) {
@@ -2800,7 +2806,7 @@ static INT_32 glEfuseCheck(P_ADAPTER_T prAdapter)
 * \retval negative value Failed
 */
 /*----------------------------------------------------------------------------*/
-static INT_32 wlanProbe(PVOID pvData, PVOID pvDriverData)
+static INT_32 wlanProbe(struct sdio_func *pvData, PVOID pvDriverData)
 {
 	struct wireless_dev *prWdev = NULL;
 	P_WLANDEV_INFO_T prWlandevInfo = NULL;
@@ -2824,6 +2830,7 @@ static INT_32 wlanProbe(PVOID pvData, PVOID pvDriverData)
 		PUINT_8 pucConfigBuf = NULL, pucCfgBuf = NULL;
 		UINT_32 u4ConfigReadLen = 0;
 #endif
+	dev_info(&pvData->dev, "Mediatek MT7668 %s\n",__func__);
 
 	do {
 		/* 4 <1> Initialize the IO port of the interface */
@@ -3168,14 +3175,6 @@ static INT_32 wlanProbe(PVOID pvData, PVOID pvDriverData)
 
 #if CFG_SUPPORT_EASY_DEBUG
 
-#if 0
-	wlanGetParseConfig(prGlueInfo->prAdapter);
-	/*wlanGetParseConfig would reparsing the config file,
-	*and then, sent to firmware
-	*use wlanFeatureToFw to take it(won't be reparsing)
-	*/
-#endif
-
 	/* move before reading file
 	 *wlanLoadDefaultCustomerSetting(prAdapter);
 	*/
@@ -3516,7 +3515,7 @@ static int initWlan(void)
 	/*
 	*	For Ref project -> Default : 0
 	*/
-#if CFG_DC_WOW_CALLBACK
+#if CFG_DC_WOW_CALLBACK_DEVMFC_OFF
 	/*
 	* register system DC wow enable/disable callback function
 	*/

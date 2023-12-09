@@ -6678,6 +6678,7 @@ VOID kalInitDevWakeup(P_ADAPTER_T prAdapter, struct device *prDev)
 		device_init_wakeup(prDev, TRUE);
 }
 
+#if 0 /* DEVMFC */
 
 unsigned long kal_kallsyms_lookup_name(const char *name)
 {
@@ -6695,3 +6696,4 @@ unsigned long kal_kallsyms_lookup_name(const char *name)
 	return ret;
 }
 
+#endif

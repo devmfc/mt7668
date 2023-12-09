@@ -182,7 +182,7 @@
 #define CFG_SUPPORT_RX_HT_GF        1	/* 802.11n RX HT green-field capability */
 #define CFG_SUPPORT_BFER            1
 #define CFG_SUPPORT_BFEE            1
-#define CFG_SUPPORT_WAPI            1
+#define CFG_SUPPORT_WAPI            0  // DEVMFC: was 1 but results in errors and is an "unused chinese standard"?
 
 /* Enable QA Tool Support */
 #define CFG_SUPPORT_QA_TOOL			1
@@ -271,11 +271,11 @@
 /* 1(default): Enable SDIO ISR & TX/RX status enhance mode
  * 0: Disable
  */
-#define CFG_SDIO_RX_ENHANCE                          1
+#define CFG_SDIO_RX_ENHANCE                          0 // :DEVMFC was 1
 /* 1: Enable SDIO TX enhance mode(Multiple frames in single BLOCK CMD)
  * 0(default): Disable
  */
-#define CFG_SDIO_TX_AGG                              1
+#define CFG_SDIO_TX_AGG                              0 // :DEVMFC was 1
 
 /* 1: Enable SDIO RX enhance mode(Multiple frames in single BLOCK CMD)
  * 0(default): Disable
@@ -454,7 +454,6 @@
 
 #define CFG_INIT_UAPSD_AC_BMP                    0	/* (BIT(3) | BIT(2) | BIT(1) | BIT(0)) */
 
-/* #define CFG_SUPPORT_WAPI                        0 */
 #define CFG_SUPPORT_WPS                          1
 #define CFG_SUPPORT_WPS2                         1
 
@@ -944,7 +943,7 @@
  * Chip low power debug function
  *------------------------------------------------------------------------------
  */
-#define CFG_SUPPORT_LOW_POWER_DEBUG		1
+#define CFG_SUPPORT_LOW_POWER_DEBUG		0 // DEVMFC: was 1
 
 /*------------------------------------------------------------------------------
  * Support WMT WIFI Path Config
@@ -1054,7 +1053,7 @@
 /*
 *   For Ref project -> Default : 0
 */
-#define CFG_DC_WOW_CALLBACK 1
+#define CFG_DC_WOW_CALLBACK 0 // DEVMFC: was 1
 
 
 /*******************************************************************************
