@@ -1556,6 +1556,12 @@ kalHardStartXmit(struct sk_buff *prOrgSkb, IN struct net_device *prDev, P_GLUE_I
 	ASSERT(prOrgSkb);
 	ASSERT(prGlueInfo);
 
+
+	if(prOrgSkb->len>1500){
+		pr_info("DEVMFC:%s[%d]TOOBIG\n",__func__,prOrgSkb->len);
+		//WARN_ON(1);
+	}
+	
 	if (prGlueInfo->ulFlag & GLUE_FLAG_HALT) {
 		DBGLOG(INIT, INFO, "GLUE_FLAG_HALT skip tx\n");
 		dev_kfree_skb(prOrgSkb);

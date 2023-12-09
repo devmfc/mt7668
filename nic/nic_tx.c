@@ -2532,6 +2532,11 @@ WLAN_STATUS nicTxEnqueueMsdu(IN P_ADAPTER_T prAdapter, IN P_MSDU_INFO_T prMsduIn
 
 	KAL_SPIN_LOCK_DECLARATION();
 
+	if (prMsduInfo->u2FrameLength > 1514) {
+		pr_info("DEVMFC: %s TOO BIG!!! Abort! u2FrameLength[%d]\n", __func__, prMsduInfo->u2FrameLength);
+		return WLAN_STATUS_FAILURE;
+	}
+	
 	ASSERT(prAdapter);
 	ASSERT(prMsduInfo);
 

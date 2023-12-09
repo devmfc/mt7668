@@ -1648,6 +1648,8 @@ BOOL kalDevWriteData(IN P_GLUE_INFO_T prGlueInfo, IN P_MSDU_INFO_T prMsduInfo)
 	skb = (struct sk_buff *)prMsduInfo->prPacket;
 	pucBuf = skb->data;
 	u4Length = skb->len;
+	if(skb->len > 1500) 
+		pr_info("DEVMFC: %s skb->len [%d] u4CoalescingBufCachedSize[%d]\n",__func__, skb->len, prAdapter->u4CoalescingBufCachedSize);
 	ucTC = prMsduInfo->ucTC;
 
 	prTxCtrl = &prAdapter->rTxCtrl;
