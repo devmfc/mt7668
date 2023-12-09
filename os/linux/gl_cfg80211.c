@@ -2473,6 +2473,96 @@ void mtk_cfg80211_mgmt_frame_register(IN struct wiphy *wiphy,
 
 }				/* mtk_cfg80211_mgmt_frame_register */
 
+
+void mtk_cfg80211_update_mgmt_frame_registrations(struct wiphy *wiphy,
+												  struct wireless_dev *wdev,
+												  struct mgmt_frame_regs *upd)
+{
+	P_GLUE_INFO_T prGlueInfo = (P_GLUE_INFO_T) NULL;
+
+#if CFG_CHIP_RESET_SUPPORT
+	if (checkResetState()) {
+		DBGLOG(INIT, WARN, "wlan is halt, skip mgmt reg.");
+		return;
+	}
+	rst_data.entry_conut++;
+	DBGLOG(INIT, TRACE, "entry_conut = %d\n", rst_data.entry_conut);
+#endif
+
+	do {
+
+		DBGLOG(INIT, TRACE, "mtk_cfg80211_update_mgmt_frame_registrations\n");
+
+		prGlueInfo = (P_GLUE_INFO_T) wiphy_priv(wiphy);
+#if 0  // DEVMFC 
+		switch (frame_type) {
+		case MAC_FRAME_PROBE_REQ:
+			if (reg) {
+				prGlueInfo->u4OsMgmtFrameFilter |= PARAM_PACKET_FILTER_PROBE_REQ;
+				DBGLOG(INIT, TRACE, "Open packet filer probe request\n");
+			} else {
+				prGlueInfo->u4OsMgmtFrameFilter &= ~PARAM_PACKET_FILTER_PROBE_REQ;
+				DBGLOG(INIT, TRACE, "Close packet filer probe request\n");
+			}
+			break;
+		case MAC_FRAME_ACTION:
+			if (reg) {
+				prGlueInfo->u4OsMgmtFrameFilter |= PARAM_PACKET_FILTER_ACTION_FRAME;
+				DBGLOG(INIT, TRACE, "Open packet filer action frame.\n");
+			} else {
+				prGlueInfo->u4OsMgmtFrameFilter &= ~PARAM_PACKET_FILTER_ACTION_FRAME;
+				DBGLOG(INIT, TRACE, "Close packet filer action frame.\n");
+			}
+			break;
+		default:
+			DBGLOG(INIT, TRACE, "Ask frog to add code for mgmt:%x\n", frame_type);
+			break;
+		}
+
+#endif
+		u32 mask = upd->interface_stypes;
+		//prGlueInfo->u4OsMgmtFrameFilter =  mask2framefilter(mask);
+
+
+		if (prGlueInfo->prAdapter != NULL) {
+
+			set_bit(GLUE_FLAG_FRAME_FILTER_AIS_BIT, &prGlueInfo->ulFlag);
+
+			/* wake up main thread */
+			wake_up_interruptible(&prGlueInfo->waitq);
+
+			if (in_interrupt())
+				DBGLOG(INIT, TRACE, "It is in interrupt level\n");
+		}
+#if 0
+
+		prMgmtFrameRegister =
+		    (P_MSG_P2P_MGMT_FRAME_REGISTER_T) cnmMemAlloc(prGlueInfo->prAdapter,
+								  RAM_TYPE_MSG, sizeof(MSG_P2P_MGMT_FRAME_REGISTER_T));
+
+		if (prMgmtFrameRegister == NULL) {
+			ASSERT(FALSE);
+			break;
+		}
+
+		prMgmtFrameRegister->rMsgHdr.eMsgId = MID_MNY_P2P_MGMT_FRAME_REGISTER;
+
+		prMgmtFrameRegister->u2FrameType = frame_type;
+		prMgmtFrameRegister->fgIsRegister = reg;
+
+		mboxSendMsg(prGlueInfo->prAdapter, MBOX_ID_0, (P_MSG_HDR_T) prMgmtFrameRegister, MSG_SEND_METHOD_BUF);
+
+#endif
+
+	} while (FALSE);
+
+#if CFG_CHIP_RESET_SUPPORT
+	rst_data.entry_conut--;
+	DBGLOG(INIT, TRACE, "entry_conut = %d\n", rst_data.entry_conut);
+#endif
+
+}				/* mtk_cfg80211_mgmt_frame_register */
+
 /*----------------------------------------------------------------------------*/
 /*!
  * @brief This routine is responsible for requesting to stay on a

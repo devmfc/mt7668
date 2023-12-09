@@ -152,7 +152,7 @@ typedef union _ULARGE_INTEGER {
 	UINT_64 QuadPart;
 } ULARGE_INTEGER, *PULARGE_INTEGER;
 
-typedef INT_32(*probe_card) (PVOID pvData, PVOID pvDriverData);
+typedef INT_32(*probe_card) (struct sdio_func *pvData, PVOID pvDriverData);
 typedef VOID(*remove_card) (VOID);
 
 /*******************************************************************************

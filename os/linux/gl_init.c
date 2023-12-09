@@ -550,7 +550,11 @@ static struct cfg80211_ops mtk_wlan_ops = {
 	.cancel_remain_on_channel = mtk_cfg80211_cancel_remain_on_channel,
 	.mgmt_tx = mtk_cfg80211_mgmt_tx,
 	/* .mgmt_tx_cancel_wait        = mtk_cfg80211_mgmt_tx_cancel_wait, */
+#if KERNEL_VERSION(5, 8, 0) >= CFG80211_VERSION_CODE
 	.mgmt_frame_register = mtk_cfg80211_mgmt_frame_register,
+#else
+	.update_mgmt_frame_registrations = mtk_cfg80211_update_mgmt_frame_registrations,
+#endif
 
 #ifdef CONFIG_NL80211_TESTMODE
 	.testmode_cmd = mtk_cfg80211_testmode_cmd,
@@ -2980,18 +2984,29 @@ static INT_32 wlanProbe(struct sdio_func *pvData, PVOID pvDriverData)
 		/* TODO the change schedule API shall be provided by OS glue layer */
 		/* Switch the Wi-Fi task priority to higher priority and change the scheduling method */
 		if (prGlueInfo->prAdapter->rWifiVar.ucThreadPriority > 0) {
+			
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 9, 1))
 			const struct sched_param param = {
 				.sched_priority =
 					prAdapter->rWifiVar.ucThreadPriority
 			};
 			sched_setscheduler(prGlueInfo->main_thread,
 					   prGlueInfo->prAdapter->rWifiVar.ucThreadScheduling, &param);
+#else			
+			sched_set_fifo_low(prGlueInfo->main_thread);
+#endif
 #if CFG_SUPPORT_MULTITHREAD
+
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 9, 1))
 			sched_setscheduler(prGlueInfo->hif_thread,
 					   prGlueInfo->prAdapter->rWifiVar.ucThreadScheduling, &param);
 			sched_setscheduler(prGlueInfo->rx_thread,
 					   prGlueInfo->prAdapter->rWifiVar.ucThreadScheduling, &param);
+#else
+			sched_set_fifo_low(prGlueInfo->hif_thread);
+			sched_set_fifo_low(prGlueInfo->rx_thread);
 #endif
+#endif /* CFG_SUPPORT_MULTITHREAD */
 			DBGLOG(INIT, INFO,
 			       "Set pri = %d, sched = %d\n",
 			       prGlueInfo->prAdapter->rWifiVar.ucThreadPriority,

@@ -5548,6 +5548,8 @@ const struct file_operations rMetProcFops = {
 	.write = kalMetWriteProcfs
 };
 #endif
+
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 6, 0))
 const struct file_operations rMetProcCtrlFops = {
 	.write = kalMetCtrlWriteProcfs
 };
@@ -5555,6 +5557,16 @@ const struct file_operations rMetProcCtrlFops = {
 const struct file_operations rMetProcPortFops = {
 	.write = kalMetPortWriteProcfs
 };
+#else
+static const struct proc_ops rMetProcCtrlFops = {
+	.proc_write	= kalMetCtrlWriteProcfs
+};
+static const struct proc_ops rMetProcPortFops = {
+	.proc_write	= kalMetPortWriteProcfs
+};
+#endif
+
+
 
 int kalMetInitProcfs(IN P_GLUE_INFO_T prGlueInfo)
 {
