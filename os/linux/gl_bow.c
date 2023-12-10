@@ -1088,7 +1088,12 @@ BOOLEAN kalInitBowDevice(IN P_GLUE_INFO_T prGlueInfo, IN const char *prDevName)
 		/* 1.2 fill hardware address */
 		COPY_MAC_ADDR(rMacAddr, prAdapter->rMyMacAddr);
 		rMacAddr[0] |= 0x2;	/* change to local administrated address */
+		#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 17, 0)
 		kalMemCopy(prGlueInfo->rBowInfo.prDevHandler->dev_addr, rMacAddr, ETH_ALEN);
+		#else
+			dev_addr_set(prGlueInfo->rBowInfo.prDevHandler, rMacAddr);
+		#endif
+		
 		kalMemCopy(prGlueInfo->rBowInfo.prDevHandler->perm_addr,
 			   prGlueInfo->rBowInfo.prDevHandler->dev_addr, ETH_ALEN);
 

@@ -1882,9 +1882,11 @@ VOID TdlsCmdTestRxIndicatePkts(GLUE_INFO_T *prGlueInfo, struct sk_buff *prSkb)
 	prSkb->protocol = eth_type_trans(prSkb, prNetDev);
 	prSkb->dev = prNetDev;
 
+	#if (KERNEL_VERSION(5, 18, 0) >= CFG80211_VERSION_CODE)
 	if (!in_interrupt())
 		netif_rx_ni(prSkb);	/* only in non-interrupt context */
 	else
+	#endif
 		netif_rx(prSkb);
 }
 #endif

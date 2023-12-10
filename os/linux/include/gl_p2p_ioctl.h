@@ -401,25 +401,43 @@ int mtk_p2p_cfg80211_del_iface(struct wiphy *wiphy, struct wireless_dev *wdev);
 int
 mtk_p2p_cfg80211_add_key(struct wiphy *wiphy,
 			 struct net_device *ndev,
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 0, 0))
+			int link_id,
+#endif
 			 u8 key_index, bool pairwise, const u8 *mac_addr, struct key_params *params);
 
 int
 mtk_p2p_cfg80211_get_key(struct wiphy *wiphy,
 			 struct net_device *ndev,
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 0, 0))
+			int link_id,
+#endif				  
 			 u8 key_index,
 			 bool pairwise,
 			 const u8 *mac_addr, void *cookie, void (*callback) (void *cookie, struct key_params *));
 
 int
 mtk_p2p_cfg80211_del_key(struct wiphy *wiphy,
-			 struct net_device *ndev, u8 key_index, bool pairwise, const u8 *mac_addr);
+						struct net_device *ndev, 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 0, 0))
+						int link_id,
+#endif				  
+						u8 key_index, bool pairwise, const u8 *mac_addr);
 
 int
 mtk_p2p_cfg80211_set_default_key(struct wiphy *wiphy,
-				 struct net_device *netdev, u8 key_index, bool unicast, bool multicast);
+								struct net_device *netdev, 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 0, 0))
+								int link_id,
+#endif				  
+								u8 key_index, bool unicast, bool multicast);
 
 int
-mtk_p2p_cfg80211_set_mgmt_key(struct wiphy *wiphy, struct net_device *dev, u8 key_index);
+mtk_p2p_cfg80211_set_mgmt_key(struct wiphy *wiphy, struct net_device *dev,
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 0, 0))
+							int link_id,
+#endif
+							u8 key_index);
 
 #if KERNEL_VERSION(3, 16, 0) <= CFG80211_VERSION_CODE
 int mtk_p2p_cfg80211_get_station(struct wiphy *wiphy, struct net_device *ndev,
@@ -503,7 +521,12 @@ int mtk_p2p_cfg80211_del_station(struct wiphy *wiphy, struct net_device *dev, u8
 
 int mtk_p2p_cfg80211_mgmt_tx_cancel_wait(struct wiphy *wiphy, struct wireless_dev *wdev, u64 cookie);
 
-int mtk_p2p_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *dev);
+int mtk_p2p_cfg80211_stop_ap(struct wiphy *wiphy, 
+							struct net_device *dev
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 0, 0))
+							,unsigned int link_id
+#endif
+							);
 
 int mtk_p2p_cfg80211_set_channel(struct wiphy *wiphy, struct cfg80211_chan_def *chandef);
 
@@ -513,6 +536,9 @@ void mtk_p2p_cfg80211_mgmt_frame_register(IN struct wiphy *wiphy,
 int
 mtk_p2p_cfg80211_set_bitrate_mask(IN struct wiphy *wiphy,
 				  IN struct net_device *dev,
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 0, 0))
+				   unsigned int link_id,
+#endif
 				  IN const u8 *peer, IN const struct cfg80211_bitrate_mask *mask);
 
 #ifdef CONFIG_NL80211_TESTMODE

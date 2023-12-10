@@ -195,9 +195,13 @@ mtk_cfg80211_change_iface(struct wiphy *wiphy,
  */
 /*----------------------------------------------------------------------------*/
 int
-mtk_cfg80211_add_key(struct wiphy *wiphy,
-		     struct net_device *ndev,
-		     u8 key_index, bool pairwise, const u8 *mac_addr, struct key_params *params)
+mtk_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 1, 0))
+			 int link_id,
+#endif
+			 u8 key_index, bool pairwise, 
+			 const u8 *mac_addr,
+			 struct key_params *params)
 {
 	PARAM_KEY_T rKey;
 	P_GLUE_INFO_T prGlueInfo = NULL;
@@ -365,6 +369,9 @@ mtk_cfg80211_add_key(struct wiphy *wiphy,
 int
 mtk_cfg80211_get_key(struct wiphy *wiphy,
 		     struct net_device *ndev,
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 1, 0))
+			 int link_id,
+#endif
 		     u8 key_index,
 		     bool pairwise,
 		     const u8 *mac_addr, void *cookie, void (*callback) (void *cookie, struct key_params *)
@@ -398,7 +405,11 @@ mtk_cfg80211_get_key(struct wiphy *wiphy,
  *         others:  failure
  */
 /*----------------------------------------------------------------------------*/
-int mtk_cfg80211_del_key(struct wiphy *wiphy, struct net_device *ndev, u8 key_index, bool pairwise, const u8 *mac_addr)
+int mtk_cfg80211_del_key(struct wiphy *wiphy, struct net_device *ndev,
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 1, 0))
+						int link_id,
+#endif
+						u8 key_index, bool pairwise, const u8 *mac_addr)
 {
 	P_GLUE_INFO_T prGlueInfo = NULL;
 	WLAN_STATUS rStatus = WLAN_STATUS_SUCCESS;
@@ -467,7 +478,11 @@ int mtk_cfg80211_del_key(struct wiphy *wiphy, struct net_device *ndev, u8 key_in
  */
 /*----------------------------------------------------------------------------*/
 int
-mtk_cfg80211_set_default_key(struct wiphy *wiphy, struct net_device *ndev, u8 key_index, bool unicast, bool multicast)
+mtk_cfg80211_set_default_key(struct wiphy *wiphy, struct net_device *ndev, 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 1, 0))
+							int link_id,
+#endif
+							u8 key_index, bool unicast, bool multicast)
 {
 	P_GLUE_INFO_T prGlueInfo = NULL;
 	PARAM_DEFAULT_KEY_T rDefaultKey;
@@ -1960,7 +1975,14 @@ int mtk_cfg80211_deauth(struct wiphy *wiphy, struct net_device *ndev,
 	if (prGlueInfo->prAdapter->rWifiVar.rConnSettings.bss) {
 		DBGLOG(REQ, INFO, "assoc timeout notify\n");
 		/* ops caller have already hold the mutex. */
-#if (KERNEL_VERSION(3, 11, 0) <= CFG80211_VERSION_CODE)
+#if (KERNEL_VERSION(6, 0, 0) <= CFG80211_VERSION_CODE)
+		struct cfg80211_assoc_failure data = {
+			.timeout = true,
+			.bss[0] = prGlueInfo->prAdapter->rWifiVar.rConnSettings.bss,
+		};
+
+		cfg80211_assoc_failure(ndev, &data);
+#elif (KERNEL_VERSION(3, 11, 0) <= CFG80211_VERSION_CODE)
 		cfg80211_assoc_timeout(ndev,
 			prGlueInfo->prAdapter->rWifiVar.rConnSettings.bss);
 #else
@@ -4134,6 +4156,7 @@ mtk_cfg80211_change_station(struct wiphy *wiphy, struct net_device *ndev, const 
 	CMD_PEER_UPDATE_T rCmdUpdate;
 	WLAN_STATUS rStatus;
 	UINT_32 u4BufLen, u4Temp;
+	u8 *u4Rates;
 	ADAPTER_T *prAdapter;
 	P_BSS_INFO_T prAisBssInfo;
 
@@ -4154,21 +4177,27 @@ mtk_cfg80211_change_station(struct wiphy *wiphy, struct net_device *ndev, const 
 
 	if (params == NULL)
 		return 0;
-	else if (params->supported_rates == NULL)
+	
+	#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 0, 0))
+		u4Rates = params->supported_rates;
+		u4Temp = params->supported_rates_len;
+	#else
+		u4Rates=params->link_sta_params.supported_rates;
+		u4Temp = params->link_sta_params.supported_rates_len;
+	#endif
+
+	//if (params->supported_rates == NULL)
+	if (u4Rates == NULL)
 		return 0;
 
 	/* init */
 	kalMemZero(&rCmdUpdate, sizeof(rCmdUpdate));
 	kalMemCopy(rCmdUpdate.aucPeerMac, mac, 6);
 
-	if (params->supported_rates != NULL) {
-
-		u4Temp = params->supported_rates_len;
 		if (u4Temp > CMD_PEER_UPDATE_SUP_RATE_MAX)
 			u4Temp = CMD_PEER_UPDATE_SUP_RATE_MAX;
-		kalMemCopy(rCmdUpdate.aucSupRate, params->supported_rates, u4Temp);
+	kalMemCopy(rCmdUpdate.aucSupRate, u4Rates, u4Temp);
 		rCmdUpdate.u2SupRateLen = u4Temp;
-	}
 
 	/*
 	 * In supplicant, only recognize WLAN_EID_QOS 46, not 0xDD WMM
@@ -4188,25 +4217,26 @@ mtk_cfg80211_change_station(struct wiphy *wiphy, struct net_device *ndev, const 
 		rCmdUpdate.u2ExtCapLen = u4Temp;
 	}
 
-	if (params->ht_capa != NULL) {
+	#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 0, 0))
+		//ht_capa = params->ht_capa;
+		#define HT_CAPA params->ht_capa
+	#else
+		#define HT_CAPA params->link_sta_params.ht_capa
+	#endif
+	
+	if (HT_CAPA != NULL) {
 
-		rCmdUpdate.rHtCap.u2CapInfo = params->ht_capa->cap_info;
-		rCmdUpdate.rHtCap.ucAmpduParamsInfo = params->ht_capa->ampdu_params_info;
-		rCmdUpdate.rHtCap.u2ExtHtCapInfo = params->ht_capa->extended_ht_cap_info;
-		rCmdUpdate.rHtCap.u4TxBfCapInfo = params->ht_capa->tx_BF_cap_info;
-		rCmdUpdate.rHtCap.ucAntennaSelInfo = params->ht_capa->antenna_selection_info;
+		rCmdUpdate.rHtCap.u2CapInfo = HT_CAPA->cap_info;
+		rCmdUpdate.rHtCap.ucAmpduParamsInfo = HT_CAPA->ampdu_params_info;
+		rCmdUpdate.rHtCap.u2ExtHtCapInfo = HT_CAPA->extended_ht_cap_info;
+		rCmdUpdate.rHtCap.u4TxBfCapInfo = HT_CAPA->tx_BF_cap_info;
+		rCmdUpdate.rHtCap.ucAntennaSelInfo = HT_CAPA->antenna_selection_info;
 		kalMemCopy(rCmdUpdate.rHtCap.rMCS.arRxMask,
-			   params->ht_capa->mcs.rx_mask, sizeof(rCmdUpdate.rHtCap.rMCS.arRxMask));
+			   HT_CAPA->mcs.rx_mask, sizeof(rCmdUpdate.rHtCap.rMCS.arRxMask));
 
-		rCmdUpdate.rHtCap.rMCS.u2RxHighest = params->ht_capa->mcs.rx_highest;
-		rCmdUpdate.rHtCap.rMCS.ucTxParams = params->ht_capa->mcs.tx_params;
+		rCmdUpdate.rHtCap.rMCS.u2RxHighest = HT_CAPA->mcs.rx_highest;
+		rCmdUpdate.rHtCap.rMCS.ucTxParams = HT_CAPA->mcs.tx_params;
 		rCmdUpdate.fgIsSupHt = TRUE;
-	}
-	/* vht */
-
-	if (params->vht_capa != NULL) {
-		/* rCmdUpdate.rVHtCap */
-		/* rCmdUpdate.rVHtCap */
 	}
 
 	/* update a TDLS peer record */

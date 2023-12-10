@@ -123,7 +123,6 @@ typedef struct _WLANDEV_INFO_T {
 
 MODULE_AUTHOR(NIC_AUTHOR);
 MODULE_DESCRIPTION(NIC_DESC);
-MODULE_SUPPORTED_DEVICE(NIC_NAME);
 
 /* MODULE_LICENSE("MTK Propietary"); */
 MODULE_LICENSE("Dual BSD/GPL");
@@ -1571,7 +1570,13 @@ static int wlanSetMacAddress(struct net_device *ndev, void *addr)
 	prAdapter = prGlueInfo->prAdapter;
 
 	COPY_MAC_ADDR(prAdapter->prAisBssInfo->aucOwnMacAddr, sa->sa_data);
+	
+	#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 17, 0)
 	COPY_MAC_ADDR(prGlueInfo->prDevHandler->dev_addr, sa->sa_data);
+	#else
+		dev_addr_set(prGlueInfo->prDevHandler, sa->sa_data);
+	#endif
+	
 	DBGLOG(INIT, INFO, "Set connect random macaddr to " MACSTR ".\n",
 	       MAC2STR(prAdapter->prAisBssInfo->aucOwnMacAddr));
 
@@ -3041,8 +3046,15 @@ static INT_32 wlanProbe(struct sdio_func *pvData, PVOID pvDriverData)
 
 		/* set MAC address */
 		if (prAdapter) {
+			
+			#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 17, 0)
 			kalMemCopy(prGlueInfo->prDevHandler->dev_addr,
 			prAdapter->rWifiVar.aucMacAddress, ETH_ALEN);
+			#else
+				dev_addr_set(prGlueInfo->prDevHandler, 
+				prAdapter->rWifiVar.aucMacAddress);
+			#endif
+			
 			kalMemCopy(prGlueInfo->prDevHandler->perm_addr,
 			prGlueInfo->prDevHandler->dev_addr, ETH_ALEN);
 

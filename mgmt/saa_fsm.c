@@ -1746,10 +1746,18 @@ WLAN_STATUS saaFsmRunEventRxDisassoc(IN P_ADAPTER_T prAdapter, IN P_SW_RFB_T prS
 						return WLAN_STATUS_SUCCESS;
 					}
 #endif
+
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 0, 0))
+		//ht_capa = params->ht_capa;
+		#define BSS_CONNECTED(wdev) wdev->current_bss
+	#else
+		#define BSS_CONNECTED(wdev) wdev->connected
+	#endif
+
 #if CFG_SUPPORT_CFG80211_AUTH
 		DBGLOG(SAA, INFO, "notification of RX disassociation %d\n",
 			prSwRfb->u2PacketLen);
-		if (wdev->current_bss)
+		if (BSS_CONNECTED(wdev))
 			kalIndicateRxDisassocToUpperLayer(
 					prAdapter->prGlueInfo->prDevHandler,
 					(PUINT_8)prDisassocFrame,
@@ -1778,7 +1786,7 @@ WLAN_STATUS saaFsmRunEventRxDisassoc(IN P_ADAPTER_T prAdapter, IN P_SW_RFB_T prS
 		ucRoleIdx = (UINT_8)prBssInfo->u4PrivateData;
 		wdev = prAdapter->prGlueInfo->prP2PInfo[ucRoleIdx]
 					->prDevHandler->ieee80211_ptr;
-		if (wdev->current_bss)
+		if (BSS_CONNECTED(wdev))
 			kalIndicateRxDisassocToUpperLayer(
 				prAdapter->prGlueInfo
 					->prP2PInfo[ucRoleIdx]->aprRoleHandler,
@@ -1796,7 +1804,7 @@ WLAN_STATUS saaFsmRunEventRxDisassoc(IN P_ADAPTER_T prAdapter, IN P_SW_RFB_T prS
 #if CFG_SUPPORT_CFG80211_AUTH
 		DBGLOG(SAA, INFO, "notification of RX disassociation %d\n",
 			prSwRfb->u2PacketLen);
-		if (wdev->current_bss)
+		if (BSS_CONNECTED(wdev))
 			kalIndicateRxDisassocToUpperLayer(
 					prAdapter->prGlueInfo->prDevHandler,
 					(PUINT_8)prDisassocFrame,

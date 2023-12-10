@@ -600,7 +600,11 @@ VOID kalUpdateMACAddress(IN P_GLUE_INFO_T prGlueInfo, IN PUINT_8 pucMacAddr)
 	ASSERT(pucMacAddr);
 
 	if (UNEQUAL_MAC_ADDR(prGlueInfo->prDevHandler->dev_addr, pucMacAddr))
+	#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 17, 0)
 		memcpy(prGlueInfo->prDevHandler->dev_addr, pucMacAddr, PARAM_MAC_ADDR_LEN);
+	#else
+		dev_addr_set(prGlueInfo->prDevHandler, pucMacAddr);
+	#endif
 
 }
 
@@ -957,9 +961,11 @@ WLAN_STATUS kalRxIndicateOnePkt(IN P_GLUE_INFO_T prGlueInfo, IN PVOID pvPkt)
 	if (prSkb->protocol == HTONS(ETH_P_1X))
 		DBGLOG(RSN, STATE, "Rx EAPOL Frame [Len: %d]\n", prSkb->len);
 
+	#if (KERNEL_VERSION(5, 18, 0) >= CFG80211_VERSION_CODE)
 	if (!in_interrupt())
 		netif_rx_ni(prSkb);	/* only in non-interrupt context */
 	else
+	#endif
 		netif_rx(prSkb);
 
 	return WLAN_STATUS_SUCCESS;
@@ -4977,7 +4983,14 @@ static void kalProcessCfg80211TxPkt(struct PARAM_CFG80211_REQ *prCfg80211Req)
 	kalAcquireWDevMutex(prCfg80211Req->prDevHandler);
 
 	switch (prCfg80211Req->ucFrameType) {
-#if (KERNEL_VERSION(3, 11, 0) <= CFG80211_VERSION_CODE)
+#if (KERNEL_VERSION(5, 11, 0) <= CFG80211_VERSION_CODE)
+	case MAC_FRAME_DISASSOC:
+	case MAC_FRAME_DEAUTH:
+		cfg80211_tx_mlme_mgmt(prCfg80211Req->prDevHandler,
+			(const u8 *)prCfg80211Req->prFrame,
+			prCfg80211Req->frameLen, false);
+		break;
+#elif (KERNEL_VERSION(3, 11, 0) <= CFG80211_VERSION_CODE)
 	case MAC_FRAME_DISASSOC:
 	case MAC_FRAME_DEAUTH:
 		cfg80211_tx_mlme_mgmt(prCfg80211Req->prDevHandler,
@@ -5007,6 +5020,11 @@ static void kalProcessCfg80211TxPkt(struct PARAM_CFG80211_REQ *prCfg80211Req)
 
 static void kalProcessCfg80211RxPkt(struct PARAM_CFG80211_REQ *prCfg80211Req)
 {
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 0, 0))
+	struct cfg80211_rx_assoc_resp resp = {
+		.uapsd_queues = -1,
+	};
+#endif
 	ASSERT(prCfg80211Req);
 
 	DBGLOG(REQ, INFO, "\n");
@@ -5040,7 +5058,14 @@ static void kalProcessCfg80211RxPkt(struct PARAM_CFG80211_REQ *prCfg80211Req)
 		break;
 #endif
 	case MAC_FRAME_ASSOC_RSP:
-#if (KERNEL_VERSION(5, 1, 0) <= CFG80211_VERSION_CODE)
+#if (KERNEL_VERSION(6, 0, 0) <= CFG80211_VERSION_CODE)
+	resp.links[0].bss = prCfg80211Req->bss;
+	resp.buf = (u8 *)prCfg80211Req->prFrame;
+	resp.len = prCfg80211Req->frameLen;
+	resp.req_ies = NULL;
+	resp.req_ies_len = 0;
+	cfg80211_rx_assoc_resp(prCfg80211Req->prDevHandler, &resp);
+#elif (KERNEL_VERSION(5, 1, 0) <= CFG80211_VERSION_CODE)
 		/* [TODO] Set uapsd_queues/req_ies/req_ies_len properly */
 		cfg80211_rx_assoc_resp(prCfg80211Req->prDevHandler,
 			prCfg80211Req->bss,
@@ -6680,7 +6705,14 @@ VOID kalIndicateChannelSwitch(IN P_GLUE_INFO_T prGlueInfo,
 	DBGLOG(REQ, STATE, "DFS channel switch to %d\n", ucChannelNum);
 
 	cfg80211_chandef_create(&chandef, prChannel, rChannelType);
+
+	#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 19, 2))
 	cfg80211_ch_switch_notify(prGlueInfo->prDevHandler, &chandef);
+	#else
+		cfg80211_ch_switch_notify(prGlueInfo->prDevHandler, &chandef, 0);
+	#endif
+
+	
 }
 #endif
 

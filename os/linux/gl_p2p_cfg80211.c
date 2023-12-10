@@ -473,7 +473,13 @@ struct wireless_dev *mtk_p2p_cfg80211_add_iface(struct wiphy *wiphy,
 			else
 				rMacAddr[0] ^= prGlueInfo->prAdapter->prP2pInfo->u4DeviceNum << 2;
 		}
+		
+		#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 17, 0)
 		kalMemCopy(prNewNetDevice->dev_addr, rMacAddr, ETH_ALEN);
+		#else
+			dev_addr_set(prNewNetDevice, rMacAddr);
+		#endif
+		
 		kalMemCopy(prNewNetDevice->perm_addr, rMacAddr, ETH_ALEN);
 
 		DBGLOG(P2P, TRACE, "mtk_p2p_cfg80211_add_iface ucBssIdx=%d\n", prNetDevPriv->ucBssIdx);
@@ -659,6 +665,9 @@ int mtk_p2p_cfg80211_del_iface(struct wiphy *wiphy, struct wireless_dev *wdev)
 
 int mtk_p2p_cfg80211_add_key(struct wiphy *wiphy,
 			     struct net_device *ndev,
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 0, 0))
+				 int link_id,
+#endif
 			     u8 key_index, bool pairwise, const u8 *mac_addr, struct key_params *params)
 {
 	P_GLUE_INFO_T prGlueInfo = NULL;
@@ -806,6 +815,9 @@ int mtk_p2p_cfg80211_add_key(struct wiphy *wiphy,
 
 int mtk_p2p_cfg80211_get_key(struct wiphy *wiphy,
 			     struct net_device *ndev,
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 0, 0))
+				 int link_id,
+#endif				  				 
 			     u8 key_index,
 			     bool pairwise,
 			     const u8 *mac_addr, void *cookie, void (*callback) (void *cookie, struct key_params *)
@@ -827,7 +839,11 @@ int mtk_p2p_cfg80211_get_key(struct wiphy *wiphy,
 }
 
 int mtk_p2p_cfg80211_del_key(struct wiphy *wiphy,
-			     struct net_device *ndev, u8 key_index, bool pairwise, const u8 *mac_addr)
+			     struct net_device *ndev, 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 0, 0))
+				  int link_id,
+#endif				  
+				 u8 key_index, bool pairwise, const u8 *mac_addr)
 {
 	P_GLUE_INFO_T prGlueInfo = NULL;
 	PARAM_REMOVE_KEY_T rRemoveKey;
@@ -881,7 +897,11 @@ int mtk_p2p_cfg80211_del_key(struct wiphy *wiphy,
 
 int
 mtk_p2p_cfg80211_set_default_key(struct wiphy *wiphy,
-				 struct net_device *netdev, u8 key_index, bool unicast, bool multicast)
+				 struct net_device *netdev, 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 0, 0))
+				  int link_id,
+#endif				  
+				 u8 key_index, bool unicast, bool multicast)
 {
 	P_GLUE_INFO_T prGlueInfo = NULL;
 	PARAM_DEFAULT_KEY_T rDefaultKey;
@@ -946,7 +966,11 @@ mtk_p2p_cfg80211_set_default_key(struct wiphy *wiphy,
  *         others:  failure
  */
 /*----------------------------------------------------------------------------*/
-int mtk_p2p_cfg80211_set_mgmt_key(struct wiphy *wiphy, struct net_device *dev, u8 key_index)
+int mtk_p2p_cfg80211_set_mgmt_key(struct wiphy *wiphy, struct net_device *dev
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 0, 0))
+								,int link_id
+#endif
+								,u8 key_index)
 {
 	DBGLOG(RSN, INFO, "mtk_p2p_cfg80211_set_mgmt_key, kid:%d\n", key_index);
 
@@ -2021,7 +2045,12 @@ int mtk_p2p_cfg80211_change_beacon(struct wiphy *wiphy, struct net_device *dev, 
 	return i4Rslt;
 }				/* mtk_p2p_cfg80211_change_beacon */
 
-int mtk_p2p_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
+int mtk_p2p_cfg80211_stop_ap(struct wiphy *wiphy, 
+							struct net_device *dev
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 0, 0))
+							,unsigned int link_id
+#endif
+							)
 {
 	P_GLUE_INFO_T prGlueInfo = (P_GLUE_INFO_T) NULL;
 	INT_32 i4Rslt = -EINVAL;
@@ -2960,6 +2989,9 @@ int mtk_p2p_cfg80211_set_channel(IN struct wiphy *wiphy, struct cfg80211_chan_de
 int
 mtk_p2p_cfg80211_set_bitrate_mask(IN struct wiphy *wiphy,
 				  IN struct net_device *dev,
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 0, 0))
+				  unsigned int link_id,
+#endif				  
 				  IN const u8 *peer, IN const struct cfg80211_bitrate_mask *mask)
 {
 	INT_32 i4Rslt = -EINVAL;
