@@ -1433,15 +1433,15 @@ VOID halRxSDIOAggReceiveRFBs(IN P_ADAPTER_T prAdapter)
 
 VOID halProcessRxInterrupt(IN P_ADAPTER_T prAdapter)
 {
-#if CFG_SDIO_INTR_ENHANCE
-#if CFG_SDIO_RX_AGG
-	halRxSDIOAggReceiveRFBs(prAdapter);
-#else
+//#if CFG_SDIO_INTR_ENHANCE
+//#if CFG_SDIO_RX_AGG
+	//halRxSDIOAggReceiveRFBs(prAdapter); // DEVMFC: kernel oops with:  kalRxIndicateOnePkt+0x128/0x338 [wlan_mt76x8_sdio]
+//#else
 	halRxSDIOEnhanceReceiveRFBs(prAdapter);
-#endif
-#else
-	halRxSDIOReceiveRFBs(prAdapter);
-#endif /* CFG_SDIO_INTR_ENHANCE */
+//#endif
+//#else
+	//halRxSDIOReceiveRFBs(prAdapter);
+//#endif /* CFG_SDIO_INTR_ENHANCE */
 }
 
 VOID halHifSwInfoInit(IN P_ADAPTER_T prAdapter)
