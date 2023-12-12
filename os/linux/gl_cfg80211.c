@@ -1005,7 +1005,7 @@ int mtk_cfg80211_scan(struct wiphy *wiphy, struct cfg80211_scan_request *request
 			rScanRequest.arChnlInfoList[i].u4CenterFreq1 = request->channels[i]->center_freq;
 			rScanRequest.arChnlInfoList[i].u4CenterFreq2 = 0;
 			rScanRequest.arChnlInfoList[i].u2PriChnlFreq = request->channels[i]->center_freq;
-#if KERNEL_VERSION(3, 12, 0) <= CFG80211_VERSION_CODE
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0)
 			rScanRequest.arChnlInfoList[i].ucChnlBw = request->scan_width;
 #else
 			rScanRequest.arChnlInfoList[i].ucChnlBw = 0;
