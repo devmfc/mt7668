@@ -6708,8 +6708,10 @@ VOID kalIndicateChannelSwitch(IN P_GLUE_INFO_T prGlueInfo,
 
 	#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 19, 2))
 	cfg80211_ch_switch_notify(prGlueInfo->prDevHandler, &chandef);
-	#else
+	#elif (LINUX_VERSION_CODE < KERNEL_VERSION(6, 3, 0))
 		cfg80211_ch_switch_notify(prGlueInfo->prDevHandler, &chandef, 0);
+	#else
+		cfg80211_ch_switch_notify(prGlueInfo->prDevHandler, &chandef, 0, 0);
 	#endif
 
 	

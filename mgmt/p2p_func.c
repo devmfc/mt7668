@@ -1241,15 +1241,21 @@ VOID p2pFuncDfsSwitchCh(IN P_ADAPTER_T prAdapter, IN P_BSS_INFO_T prBssInfo, IN 
 	 * P2P GO case: p2p0=>prDevHandler, p2p-xxx-x=> aprRoleHandler
 	 */
 
-	#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 19, 2))
+	 
+	 #if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 19, 2))
 		cfg80211_ch_switch_notify(
 		prGlueInfo->prP2PInfo[role_idx]->aprRoleHandler,
 		prGlueInfo->prP2PInfo[role_idx]->chandef);
-	#else
+	#elif (LINUX_VERSION_CODE < KERNEL_VERSION(6, 3, 0))
 		cfg80211_ch_switch_notify(
 		prGlueInfo->prP2PInfo[role_idx]->aprRoleHandler,
 		prGlueInfo->prP2PInfo[role_idx]->chandef,
 		0);
+	#else
+		cfg80211_ch_switch_notify(
+		prGlueInfo->prP2PInfo[role_idx]->aprRoleHandler,
+		prGlueInfo->prP2PInfo[role_idx]->chandef,
+		0, 0);
 	#endif
 	
 	DBGLOG(P2P, INFO, "p2pFuncDfsSwitchCh: Update to OS Done\n");

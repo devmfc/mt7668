@@ -126,7 +126,16 @@
 
 #include <linux/kernel.h>	/* bitops.h */
 
-#if KERNEL_VERSION(4, 11, 0) <= LINUX_VERSION_CODE
+//#if KERNEL_VERSION(4, 11, 0) <= LINUX_VERSION_CODE
+//#include <linux/sched.h> /* sched_setscheduler */
+//#include <uapi/linux/sched/types.h>
+//#endif
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 3, 0) 
+//#include <linux/sched.h> /* sched_setscheduler */
+#include <linux/sched/clock.h> 
+#include <uapi/linux/sched/types.h>
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(4, 11, 0) 
 #include <linux/sched.h> /* sched_setscheduler */
 #include <uapi/linux/sched/types.h>
 #endif
